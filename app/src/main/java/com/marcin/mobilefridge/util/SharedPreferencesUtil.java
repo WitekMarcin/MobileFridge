@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 /**
  * Created by Marcin on 15.12.2016.
  */
-public class SharedPreferencesService {
+public class SharedPreferencesUtil {
 
     public static String LOGIN_PREFERENCES_PATH = "login";
 
@@ -13,7 +13,7 @@ public class SharedPreferencesService {
 
     private SharedPreferences preferences;
 
-    public SharedPreferencesService(SharedPreferences preferences) {
+    public SharedPreferencesUtil(SharedPreferences preferences) {
         this.preferences = preferences;
     }
 

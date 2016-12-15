@@ -1,4 +1,4 @@
-package com.marcin.mobilefridge.util;
+package com.marcin.mobilefridge.services;
 
 import android.util.Base64;
 
@@ -11,12 +11,12 @@ import java.util.logging.Logger;
 /**
  * Created by Marcin on 11.12.2016.
  */
-public class RestConnectionUtil {
+class RestConnectionManagerService {
 
     private static String EXAMPLE_URL = "http://192.168.1.5:8080/api/get_all_fridges";
-    private Logger logger = Logger.getLogger(RestConnectionUtil.class.getName());
+    private Logger logger = Logger.getLogger(RestConnectionManagerService.class.getName());
 
-    public String tryToLogInAndReturnOauthKey(String username, String password) throws Exception {
+    String tryToLogInAndReturnOauthKey(String username, String password) throws Exception {
         String oAuthKeyValue;
         URL url;
         HttpURLConnection urlConnection = null;

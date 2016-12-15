@@ -1,4 +1,4 @@
-package com.marcin.mobilefridge;
+package com.marcin.mobilefridge.activities;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -17,6 +17,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import com.marcin.mobilefridge.R;
 import com.marcin.mobilefridge.services.LoginService;
 
 import java.io.IOException;
@@ -149,7 +150,7 @@ public class LoginActivity extends AppCompatActivity {
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+    private class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
         private final String login;
         private final String password;

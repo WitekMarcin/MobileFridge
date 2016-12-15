@@ -7,7 +7,12 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import com.marcin.mobilefridge.R;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -19,6 +24,8 @@ public class FridgeFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
+    private ArrayAdapter<String> adapter;
+
     public FridgeFragment() {
         // Required empty public constructor
     }
@@ -28,7 +35,22 @@ public class FridgeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_fridge, container, false);
+        View view = inflater.inflate(R.layout.fragment_fridge, container, false);
+
+        ListView list = (ListView) view.findViewById(R.id.listOfProducts);
+
+        String cars[] = {"Mercedes", "Fiat", "Ferrari", "Aston Martin", "Lamborghini", "Skoda", "Volkswagen", "Audi", "Citroen"};
+
+        ArrayList<String> carL = new ArrayList<String>();
+        carL.addAll(Arrays.asList(cars));
+
+        adapter = new ArrayAdapter<String>(this.getContext(), R.layout.product, carL);
+
+        list.setAdapter(adapter);
+
+        return view;
+
+
     }
 
     // TODO: Rename method, update argument and hook method into UI event

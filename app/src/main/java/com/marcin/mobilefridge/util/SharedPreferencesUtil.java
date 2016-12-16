@@ -17,6 +17,7 @@ public class SharedPreferencesUtil {
         this.preferences = preferences;
     }
 
+
     public void saveData(String pathToSave, String valueToSave) {
         SharedPreferences.Editor preferencesEditor = preferences.edit();
         preferencesEditor.putString(pathToSave, valueToSave);

@@ -10,9 +10,12 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import com.marcin.mobilefridge.R;
+import com.marcin.mobilefridge.services.FridgeService;
+import com.marcin.mobilefridge.util.SharedPreferencesUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -24,7 +27,7 @@ public class FridgeFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    private ArrayAdapter<String> adapter;
+    private ArrayAdapter<HashMap<String, String>> adapter;
 
     public FridgeFragment() {
         // Required empty public constructor
@@ -38,13 +41,23 @@ public class FridgeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_fridge, container, false);
 
         ListView list = (ListView) view.findViewById(R.id.listOfProducts);
+        SharedPreferencesUtil sharedPreferences = new SharedPreferencesUtil(
+                this.getActivity().getPreferences(Context.MODE_PRIVATE));
+        FridgeService fridgeService = new FridgeService(sharedPreferences.restoreData(
+                SharedPreferencesUtil.O_AUTH_KEY), sharedPreferences.restoreData
+                (SharedPreferencesUtil.LOGIN_PREFERENCES_PATH));
 
         String cars[] = {"Mercedes", "Fiat", "Ferrari", "Aston Martin", "Lamborghini", "Skoda", "Volkswagen", "Audi", "Citroen"};
 
         ArrayList<String> carL = new ArrayList<String>();
         carL.addAll(Arrays.asList(cars));
 
-        adapter = new ArrayAdapter<String>(this.getContext(), R.layout.product, carL);
+        try {
+            adapter = new ArrayAdapter<HashMap<String, String>>(this.getContext(), R.layout.product, fridgeService.getProducts());
+        } catch (Exception e) {
+            adapter = new ArrayAdapter<HashMap<String, String>>(this.getContext(), R.layout.product, new ArrayList<HashMap<String, String>>());
+            e.printStackTrace();
+        }
 
         list.setAdapter(adapter);
 

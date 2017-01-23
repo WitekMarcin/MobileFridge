@@ -20,8 +20,8 @@ import java.util.logging.Logger;
  */
 class RestConnectionManagerService {
 
-    private static final String GET_PRODUCTS_PATH = "http://192.168.1.5:8080/api/get_products/user_id/";
-    private static String EXAMPLE_URL = "http://192.168.1.5:8080/api/get_all_fridges";
+    private static final String GET_PRODUCTS_PATH = "http://192.168.0.122:8080/api/get_products/user_id/";
+    private static String EXAMPLE_URL = "http://192.168.0.122:8080/api/get_all_fridges";
     private Logger logger = Logger.getLogger(RestConnectionManagerService.class.getName());
 
     String tryToLogInAndReturnOauthKey(String username, String password) throws Exception {
@@ -33,6 +33,7 @@ class RestConnectionManagerService {
             oAuthKeyValue = Base64.encodeToString((username + ":" + password).getBytes(), Base64.NO_WRAP);
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestProperty("Authorization", "Basic " + oAuthKeyValue);
+            urlConnection.setRequestProperty("Content-Type", "application/json");
             urlConnection.setConnectTimeout(5000);
             logger.info("trying TO LOG IN");
             int responseCode = urlConnection.getResponseCode();
@@ -65,12 +66,16 @@ class RestConnectionManagerService {
             url = new URL(GET_PRODUCTS_PATH + username);
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestProperty("Authorization", "Basic " + oAuthKeyValue);
+            urlConnection.setRequestProperty("Content-Type", "application/json");
             urlConnection.setConnectTimeout(5000);
             logger.info("trying TO LOG IN");
             int responseCode = urlConnection.getResponseCode();
-            if (responseCode != 200)
+            if (responseCode != 200) {
+                logger.info("problem with connection with code " + responseCode);
                 throw new IOException();
-            return convertToArrayListOfProducts(String.valueOf(new BufferedReader(new InputStreamReader(urlConnection.getInputStream()))));
+            }
+            logger.info("connection success");
+            return convertToArrayListOfProducts(new BufferedReader(new InputStreamReader(urlConnection.getInputStream())));
         } catch (SocketTimeoutException e) {
             logger.info("could not connect to server");
             throw new SocketTimeoutException("Nie mogę połączyć się z serwerem, sprawdź swoje połączenie z internetem");
@@ -78,7 +83,7 @@ class RestConnectionManagerService {
             logger.info("bad credentials");
             throw new IOException("Nieprawidłowy login bądź hasło");
         } catch (Exception e) {
-            logger.info("unknown Excpetion " + e.getCause());
+            e.printStackTrace();
             throw new Exception("Wystąpił nieoczekiwany błąd, spróbuj ponownie");
         } finally {
             if (urlConnection != null) {
@@ -87,10 +92,13 @@ class RestConnectionManagerService {
         }
     }
 
-    private ArrayList<HashMap<String, String>> convertToArrayListOfProducts(String responseMessage) throws JSONException {
+    private ArrayList<HashMap<String, String>> convertToArrayListOfProducts(BufferedReader responseMessage) throws JSONException {
         ArrayList<HashMap<String, String>> productList = new ArrayList<>();
+        String jsonList = convertToString(responseMessage);
         if (responseMessage != null) {
-            JSONArray jsonArray = new JSONArray(responseMessage);
+            logger.info("CO TU SIE DZIEJE LOLZ" + jsonList);
+            JSONArray jsonArray = new JSONArray(jsonList.
+                    substring(jsonList.indexOf("["), jsonList.indexOf("]") + 1));
             for (int i = 0; i < jsonArray.length(); ++i) {
                 JSONObject product = jsonArray.getJSONObject(i);
                 HashMap<String, String> tmpHashMap = new HashMap<>();
@@ -100,7 +108,20 @@ class RestConnectionManagerService {
                 productList.add(tmpHashMap);
             }
         }
-
+        logger.info(productList.get(1).get("name"));
         return productList;
+    }
+
+    private String convertToString(BufferedReader responseMessage) {
+        String aux;
+        StringBuilder builder = new StringBuilder();
+        try {
+            while ((aux = responseMessage.readLine()) != null) {
+                builder.append(aux);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return builder.toString();
     }
 }

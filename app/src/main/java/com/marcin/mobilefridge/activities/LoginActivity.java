@@ -19,6 +19,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import com.marcin.mobilefridge.R;
 import com.marcin.mobilefridge.services.LoginService;
+import com.marcin.mobilefridge.util.SharedPreferencesUtil;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -63,7 +64,7 @@ public class LoginActivity extends AppCompatActivity {
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
-        loginService = new LoginService(getPreferences(Activity.MODE_PRIVATE));
+        loginService = new LoginService(getSharedPreferences(SharedPreferencesUtil.SHARED_PREFERENCES_FILE_PATH, Activity.MODE_PRIVATE));
     }
 
     private void attemptLogin() {

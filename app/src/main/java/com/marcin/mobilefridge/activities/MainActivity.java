@@ -1,9 +1,9 @@
 package com.marcin.mobilefridge.activities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -59,14 +59,6 @@ public class MainActivity extends AppCompatActivity implements RecipesFragment.O
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         fragmentsA.add(FridgeFragment.class.getName());
         fragmentsA.add(RecipesFragment.class.getName());
@@ -141,5 +133,16 @@ public class MainActivity extends AppCompatActivity implements RecipesFragment.O
             }
             return null;
         }
+    }
+
+    public void createRecipe(View v) {
+        Snackbar.make(v, "Dodaj swój przepis", Snackbar.LENGTH_LONG)
+                .setAction("Dodaj przepis", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(MainActivity.this, CreateRecipe.class);
+                        startActivity(intent);
+                    }
+                }).show();
     }
 }

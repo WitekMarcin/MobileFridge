@@ -18,6 +18,7 @@ import com.marcin.mobilefridge.R;
 public class RecipesFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
+    private View view;
 
     public RecipesFragment() {
         // Required empty public constructor
@@ -28,7 +29,9 @@ public class RecipesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_recipes, container, false);
+        view = inflater.inflate(R.layout.fragment_recipes, container, false);
+
+        return view;
     }
 
     // TODO: Rename method, update argument and hook method into UI event

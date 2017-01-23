@@ -17,4 +17,8 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_create_recipe">CreateRecipe</string>
+    <string name="title_of_recipe">Tytuł przepisu</string>
+    <string name="description_of_recipe">Opis przepisu</string>
+    <string name="components_of_recipe">Składniki do przepisu</string>
 </resources>

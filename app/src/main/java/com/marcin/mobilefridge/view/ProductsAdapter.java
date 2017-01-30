@@ -9,20 +9,20 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import com.marcin.mobilefridge.R;
+import com.marcin.mobilefridge.model.Product;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by Marcin on 23.01.2017.
  */
-public class ProductsAdapter extends ArrayAdapter<HashMap<String, String>> {
+public class ProductsAdapter extends ArrayAdapter<Product> {
 
     private final int resource;
-    private final ArrayList<HashMap<String, String>> items;
+    private final ArrayList<Product> items;
     Context context;
 
-    public ProductsAdapter(Context context, @LayoutRes int resource, ArrayList<HashMap<String, String>> items) {
+    public ProductsAdapter(Context context, @LayoutRes int resource, ArrayList<Product> items) {
         super(context, resource, items);
         this.context = context;
         this.resource = resource;
@@ -47,11 +47,11 @@ public class ProductsAdapter extends ArrayAdapter<HashMap<String, String>> {
             holder = (ViewHolder) row.getTag();
         }
 
-        HashMap<String, String> product = items.get(position);
+        Product product = items.get(position);
 
-        holder.nameTextView.setText(product.get("name"));
-        holder.weightTextView.setText(product.get("weight"));
-        holder.idTextView.setText(product.get("id"));
+        holder.nameTextView.setText(product.getName());
+        holder.weightTextView.setText(product.getWeight());
+        holder.idTextView.setText(String.valueOf(product.getId()));
 
         return row;
     }

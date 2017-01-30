@@ -1,6 +1,7 @@
 package com.marcin.mobilefridge.services;
 
 import android.util.Base64;
+import com.marcin.mobilefridge.model.Product;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,7 +13,6 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.logging.Logger;
 
 /**
@@ -20,8 +20,8 @@ import java.util.logging.Logger;
  */
 class RestConnectionManagerService {
 
-    private static final String GET_PRODUCTS_PATH = "http://192.168.0.122:8080/api/get_products/user_id/";
-    private static String EXAMPLE_URL = "http://192.168.0.122:8080/api/get_all_fridges";
+    private static final String GET_PRODUCTS_PATH = "http://192.168.0.241:8080/api/get_products/user_id/";
+    private static String EXAMPLE_URL = "http://192.168.0.241:8080/api/get_all_fridges";
     private Logger logger = Logger.getLogger(RestConnectionManagerService.class.getName());
 
     String tryToLogInAndReturnOauthKey(String username, String password) throws Exception {
@@ -58,7 +58,7 @@ class RestConnectionManagerService {
         return oAuthKeyValue;
     }
 
-    ArrayList<HashMap<String, String>> getProductsFromServer(String oAuthKeyValue, String username) throws Exception {
+    ArrayList<Product> getProductsFromServer(String oAuthKeyValue, String username) throws Exception {
 
         URL url;
         HttpURLConnection urlConnection = null;
@@ -92,8 +92,8 @@ class RestConnectionManagerService {
         }
     }
 
-    private ArrayList<HashMap<String, String>> convertToArrayListOfProducts(BufferedReader responseMessage) throws JSONException {
-        ArrayList<HashMap<String, String>> productList = new ArrayList<>();
+    private ArrayList<Product> convertToArrayListOfProducts(BufferedReader responseMessage) throws JSONException {
+        ArrayList<Product> productList = new ArrayList<>();
         String jsonList = convertToString(responseMessage);
         if (responseMessage != null) {
             logger.info("CO TU SIE DZIEJE LOLZ" + jsonList);
@@ -101,14 +101,17 @@ class RestConnectionManagerService {
                     substring(jsonList.indexOf("["), jsonList.indexOf("]") + 1));
             for (int i = 0; i < jsonArray.length(); ++i) {
                 JSONObject product = jsonArray.getJSONObject(i);
-                HashMap<String, String> tmpHashMap = new HashMap<>();
-                tmpHashMap.put("id", product.getString("id"));
-                tmpHashMap.put("name", product.getString("name"));
-                tmpHashMap.put("weight", product.getString("weight"));
-                productList.add(tmpHashMap);
+                Product productObj = new Product();
+                productObj.setId(Long.valueOf(product.getString("id")));
+                productObj.setName(product.getString("name"));
+                productObj.setWeight(product.getString("weight"));
+                productObj.setWeightUnit(product.getString("weightUnit"));
+                productObj.setAddingTime(product.getString("addingTime"));
+                productObj.setIconSmall(product.getString("iconSmall"));
+                productObj.setIconBig(product.getString("iconBig"));
+                productList.add(productObj);
             }
         }
-        logger.info(productList.get(1).get("name"));
         return productList;
     }
 

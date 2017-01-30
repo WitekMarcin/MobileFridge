@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import com.marcin.mobilefridge.R;
+import com.marcin.mobilefridge.model.Product;
 import com.marcin.mobilefridge.services.FridgeService;
 import com.marcin.mobilefridge.util.SharedPreferencesUtil;
 import com.marcin.mobilefridge.view.ProductsAdapter;
@@ -23,7 +24,6 @@ import com.marcin.mobilefridge.view.ProductsAdapter;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import static com.marcin.mobilefridge.util.SharedPreferencesUtil.SHARED_PREFERENCES_FILE_PATH;
 
@@ -37,7 +37,7 @@ public class FridgeFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    private ArrayAdapter<HashMap<String, String>> adapter;
+    private ArrayAdapter<Product> adapter;
     private FridgeService fridgeService;
     private View view;
     private View mProgressView;
@@ -64,7 +64,7 @@ public class FridgeFragment extends Fragment {
                 (SharedPreferencesUtil.LOGIN_PREFERENCES_PATH));
 
 
-        adapter = new ProductsAdapter(this.getContext(), R.layout.product, new ArrayList<HashMap<String, String>>());
+        adapter = new ProductsAdapter(this.getContext(), R.layout.product, new ArrayList<Product>());
 
         ProductListTask productListTask = new ProductListTask(this.getContext());
         productListTask.execute();
@@ -156,7 +156,7 @@ public class FridgeFragment extends Fragment {
 
         private final Context context;
         private String errorMessage;
-        private ArrayList<HashMap<String, String>> productList;
+        private ArrayList<Product> productList;
 
         ProductListTask(Context context) {
             this.context = context;
@@ -192,13 +192,13 @@ public class FridgeFragment extends Fragment {
                 }
 
             } else {
-                adapter = new ArrayAdapter<>(context, R.layout.product, new ArrayList<HashMap<String, String>>());
+                adapter = new ArrayAdapter<>(context, R.layout.product, new ArrayList<Product>());
             }
         }
 
         @Override
         protected void onCancelled() {
-            adapter = new ArrayAdapter<HashMap<String, String>>(context, R.layout.product, new ArrayList<HashMap<String, String>>());
+            adapter = new ArrayAdapter<>(context, R.layout.product, new ArrayList<Product>());
             showProgress(false);
         }
     }

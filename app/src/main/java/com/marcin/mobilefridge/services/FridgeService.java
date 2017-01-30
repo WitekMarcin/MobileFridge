@@ -1,7 +1,8 @@
 package com.marcin.mobilefridge.services;
 
+import com.marcin.mobilefridge.model.Product;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by Marcin on 16.12.2016.
@@ -18,7 +19,7 @@ public class FridgeService {
         restConnectionManagerService = new RestConnectionManagerService();
     }
 
-    public ArrayList<HashMap<String, String>> getProducts() throws Exception {
+    public ArrayList<Product> getProducts() throws Exception {
 
         try {
             return restConnectionManagerService.getProductsFromServer(oAuthKey, username);

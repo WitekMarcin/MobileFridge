@@ -2,6 +2,7 @@ package com.marcin.mobilefridge.services;
 
 import android.util.Base64;
 import com.marcin.mobilefridge.model.Product;
+import com.marcin.mobilefridge.model.Recipe;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,6 +10,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -21,6 +23,7 @@ import java.util.logging.Logger;
 class RestConnectionManagerService {
 
     private static final String GET_PRODUCTS_PATH = "http://192.168.0.241:8080/api/get_products/user_id/";
+    private static final String SEND_RECIPE_PATH = "http://192.168.0.241:8080/api/add_recipe/user_id/";
     private static String EXAMPLE_URL = "http://192.168.0.241:8080/api/get_all_fridges";
     private Logger logger = Logger.getLogger(RestConnectionManagerService.class.getName());
 
@@ -127,4 +130,42 @@ class RestConnectionManagerService {
         }
         return builder.toString();
     }
+
+    public void sendNewRecipeToServer(String oAuthKeyValue, String username, Recipe recipe) throws Exception {
+        URL url;
+        HttpURLConnection urlConnection = null;
+        try {
+            url = new URL(SEND_RECIPE_PATH + username);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Basic " + oAuthKeyValue);
+            urlConnection.setRequestProperty("Content-Type", "application/json");
+            urlConnection.setRequestMethod("POST");
+
+            urlConnection.setConnectTimeout(5000);
+            OutputStream outputStream = urlConnection.getOutputStream();
+            outputStream.write(recipe.toString().getBytes("UTF-8"));
+            outputStream.close();
+            logger.info("trying TO SEND");
+            urlConnection.connect();
+            int responseCode = urlConnection.getResponseCode();
+            if (responseCode != 201)
+                throw new IOException();
+            logger.info("log in succesfully wit code " + responseCode);
+
+        } catch (SocketTimeoutException e) {
+            logger.info("could not connect to server");
+            throw new SocketTimeoutException("Nie mogę połączyć się z serwerem, sprawdź swoje połączenie z internetem");
+        } catch (IOException e) {
+            logger.info("bad credentials");
+            throw new IOException("Nieprawidłowy login bądź hasło");
+        } catch (Exception e) {
+            logger.info("unknown Excpetion " + e.getCause());
+            throw new SocketTimeoutException("Wystąpił nieoczekiwany błąd, spróbuj ponownie");
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
+
 }

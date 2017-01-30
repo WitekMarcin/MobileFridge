@@ -65,7 +65,7 @@ public class FridgeFragment extends Fragment {
 
 
         adapter = new ProductsAdapter(this.getContext(), R.layout.product, new ArrayList<Product>());
-
+        showProgress(true);
         ProductListTask productListTask = new ProductListTask(this.getContext());
         productListTask.execute();
 

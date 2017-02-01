@@ -1,7 +1,10 @@
 package com.marcin.mobilefridge.services;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import com.marcin.mobilefridge.model.Product;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 
 /**
@@ -26,6 +29,25 @@ public class FridgeService {
         } catch (Exception e) {
             //TODO show message
             throw new Exception();
+        }
+    }
+
+    public void getProductsImages(ArrayList<Product> productList) {
+
+        for (Product product : productList) {
+
+            String imageURL = product.getIconSmall();
+
+            Bitmap bitmap = null;
+            try {
+                // Download Image from URL
+                InputStream input = new java.net.URL(imageURL).openStream();
+                // Decode Bitmap
+                bitmap = BitmapFactory.decodeStream(input);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            product.setSmallIconBitmap(bitmap);
         }
     }
 

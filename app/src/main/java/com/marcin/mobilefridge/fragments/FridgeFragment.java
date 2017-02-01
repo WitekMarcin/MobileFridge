@@ -176,7 +176,10 @@ public class FridgeFragment extends Fragment {
                 errorMessage = getString(R.string.error_unexpected_error);
                 return false;
             }
+            fridgeService.getProductsImages(productList);
             return true;
+
+
         }
 
         @Override

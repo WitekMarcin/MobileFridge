@@ -1,5 +1,7 @@
 package com.marcin.mobilefridge.model;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by Marcin on 30.01.2017.
  */
@@ -15,6 +17,8 @@ public class Product {
 
     private String iconBig;
     private Long id;
+
+    private Bitmap smallIconBitmap;
 
     public String getName() {
         return name;
@@ -82,5 +86,13 @@ public class Product {
 
     public Long getId() {
         return id;
+    }
+
+    public Bitmap getSmallIconBitmap() {
+        return smallIconBitmap;
+    }
+
+    public void setSmallIconBitmap(Bitmap smallIconBitmap) {
+        this.smallIconBitmap = smallIconBitmap;
     }
 }

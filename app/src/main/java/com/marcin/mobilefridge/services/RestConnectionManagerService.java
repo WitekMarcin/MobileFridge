@@ -25,7 +25,7 @@ class RestConnectionManagerService {
     private static final String GET_PRODUCTS_PATH = "http://192.168.0.241:8080/api/get_products/user_id/";
     private static final String SEND_RECIPE_PATH = "http://192.168.0.241:8080/api/add_recipe/user_id/";
     private static final String GET_RECIPES_URL = "http://192.168.0.241:8080/api/get_recipes";
-    private static String EXAMPLE_URL = "http://192.168.0.241:8080/api/get_all_fridges";
+    private static final String EXAMPLE_URL = "http://192.168.0.241:8080/api/get_all_fridges";
     private Logger logger = Logger.getLogger(RestConnectionManagerService.class.getName());
 
     String tryToLogInAndReturnOauthKey(String username, String password) throws Exception {

@@ -24,6 +24,7 @@ class RestConnectionManagerService {
 
     private static final String GET_PRODUCTS_PATH = "http://192.168.0.241:8080/api/get_products/user_id/";
     private static final String SEND_RECIPE_PATH = "http://192.168.0.241:8080/api/add_recipe/user_id/";
+    private static final String GET_RECIPES_URL = "http://192.168.0.241:8080/api/get_recipes";
     private static String EXAMPLE_URL = "http://192.168.0.241:8080/api/get_all_fridges";
     private Logger logger = Logger.getLogger(RestConnectionManagerService.class.getName());
 
@@ -100,8 +101,7 @@ class RestConnectionManagerService {
         String jsonList = convertToString(responseMessage);
         if (responseMessage != null) {
             logger.info("CO TU SIE DZIEJE LOLZ" + jsonList);
-            JSONArray jsonArray = new JSONArray(jsonList.
-                    substring(jsonList.indexOf("["), jsonList.indexOf("]") + 1));
+            JSONArray jsonArray = new JSONArray(jsonList);
             for (int i = 0; i < jsonArray.length(); ++i) {
                 JSONObject product = jsonArray.getJSONObject(i);
                 Product productObj = new Product();
@@ -168,4 +168,57 @@ class RestConnectionManagerService {
         }
     }
 
+    public ArrayList<Recipe> getAllRecipes(String oAuthKey) throws Exception {
+        URL url;
+        HttpURLConnection urlConnection = null;
+        try {
+            url = new URL(GET_RECIPES_URL);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Basic " + oAuthKey);
+            urlConnection.setRequestProperty("Content-Type", "application/json");
+            urlConnection.setConnectTimeout(5000);
+            logger.info("trying TO LOG IN");
+            int responseCode = urlConnection.getResponseCode();
+            if (responseCode != 200) {
+                logger.info("problem with connection with code " + responseCode);
+                throw new IOException();
+            }
+            logger.info("connection success");
+            return convertToArrayListOfRecipes(new BufferedReader(new InputStreamReader(urlConnection.getInputStream())));
+        } catch (SocketTimeoutException e) {
+            logger.info("could not connect to server");
+            throw new SocketTimeoutException("Nie mogę połączyć się z serwerem, sprawdź swoje połączenie z internetem");
+        } catch (IOException e) {
+            logger.info("bad credentials");
+            throw new IOException("Nieprawidłowy login bądź hasło");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Wystąpił nieoczekiwany błąd, spróbuj ponownie");
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
+
+    private ArrayList<Recipe> convertToArrayListOfRecipes(BufferedReader responseMessage) throws JSONException {
+        ArrayList<Recipe> productList = new ArrayList<>();
+        String jsonList = convertToString(responseMessage);
+        if (responseMessage != null) {
+            logger.info("CO TU SIE DZIEJE LOLZ" + jsonList);
+            JSONArray jsonArray = new JSONArray(jsonList);
+            for (int i = 0; i < jsonArray.length(); ++i) {
+                JSONObject recipe = jsonArray.getJSONObject(i);
+                Recipe recipeObj = new Recipe();
+                recipeObj.setId(Long.valueOf(recipe.getString("id")));
+                recipeObj.setTitle(recipe.getString("title"));
+                recipeObj.setDescription(recipe.getString("description"));
+                recipeObj.setPicture(recipe.getString("picture"));
+                recipeObj.setRating(recipe.getInt("rating"));
+                recipeObj.setComponentsOfRecipe(recipe.getString("componentsOfRecipe"));
+                productList.add(recipeObj);
+            }
+        }
+        return productList;
+    }
 }

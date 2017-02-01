@@ -5,6 +5,8 @@ package com.marcin.mobilefridge.model;
  */
 public class Recipe {
 
+    private Long id;
+
     private String title;
 
     private String description;
@@ -13,10 +15,40 @@ public class Recipe {
 
     private String componentsOfRecipe;
 
+    private Integer rating;
+
+    public Recipe() {
+
+    }
+
     public Recipe(String title, String description, Object picture, String componentsOfRecipe) {
         this.description = description;
         this.picture = picture;
         this.title = title;
+        this.componentsOfRecipe = componentsOfRecipe;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setPicture(Object picture) {
+        this.picture = picture;
+    }
+
+    public void setComponentsOfRecipe(String componentsOfRecipe) {
         this.componentsOfRecipe = componentsOfRecipe;
     }
 
@@ -43,4 +75,11 @@ public class Recipe {
                 "\"componentsOfRecipe\" :" + "\"" + getComponentsOfRecipe() + "\"}";
     }
 
+    public Integer getRating() {
+        return rating;
+    }
+
+    public void setRating(Integer rating) {
+        this.rating = rating;
+    }
 }

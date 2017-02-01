@@ -134,8 +134,9 @@ public class CreateRecipe extends AppCompatActivity {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            } else {
+                Toast.makeText(context, "Nie udało się dodać przepisu : " + errorMessage, Toast.LENGTH_SHORT).show();
             }
-            Toast.makeText(context, "Nie udało się dodać przepisu : " + errorMessage, Toast.LENGTH_SHORT).show();
         }
     }
 }

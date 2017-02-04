@@ -77,6 +77,7 @@ public class Recipe {
         String recipe = "{ \"title\" :" + "\"" + getTitle() + "\"," + "\"description\" :" + "\"" + getDescription() + "\","
                 + "\"picture\" :" + "\"" + getPicture() + "\"," +
                 "\"componentsOfRecipe\" :" + "\"" + getComponentsOfRecipe() + "\"}";
+        recipe = recipe.replace("\n", "\\n").replace("\r", "\\r");
         return recipe;
     }
 

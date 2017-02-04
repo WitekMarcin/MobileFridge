@@ -64,11 +64,15 @@ public class RecipeActivity extends AppCompatActivity {
         titleTextView.setText(recipe.getTitle());
         componentsTextView.setText(recipe.getComponentsOfRecipe());
         descriptionTextView.setText(recipe.getDescription());
-        ratingOfRecipeBar.setRating(recipe.getRating());
+        System.out.println((float) recipe.getRating());
+        ratingOfRecipeBar.setRating((float) recipe.getRating());
         imageOfRecipe.setImageBitmap(recipe.getImage());
     }
 
     private void createRecipeObj() {
+        if (true) {
+
+        }
         recipe = new Recipe();
         recipe.setId(getIntent().getExtras().getLong("id"));
         recipe.setTitle(getIntent().getExtras().getString("title"));

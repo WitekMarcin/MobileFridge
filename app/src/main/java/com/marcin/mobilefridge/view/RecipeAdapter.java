@@ -60,7 +60,7 @@ public class RecipeAdapter extends ArrayAdapter<Recipe> {
         if (recipe.getImage() != null)
             holder.pictureView.setImageBitmap(recipe.getImage());
         if (recipe.getRating() != null)
-            holder.ratingBar.setRating(recipe.getRating());
+            holder.ratingBar.setRating((float) recipe.getRating());
         holder.ratingBar.setEnabled(false);
 
         row.setOnClickListener(new View.OnClickListener() {

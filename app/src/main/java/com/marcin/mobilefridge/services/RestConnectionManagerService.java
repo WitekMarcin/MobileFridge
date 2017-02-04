@@ -1,6 +1,7 @@
 package com.marcin.mobilefridge.services;
 
 import android.util.Base64;
+import com.marcin.mobilefridge.model.AccountSettings;
 import com.marcin.mobilefridge.model.Product;
 import com.marcin.mobilefridge.model.Recipe;
 import org.json.JSONArray;
@@ -22,12 +23,15 @@ import java.util.logging.Logger;
  */
 class RestConnectionManagerService {
 
-    private static final String GET_PRODUCTS_PATH = "http://192.168.0.241:8080/api/get_products/user_id/";
-    private static final String SEND_RECIPE_PATH = "http://192.168.0.241:8080/api/add_recipe/user_id/";
-    private static final String GET_RECIPES_URL = "http://192.168.0.241:8080/api/get_recipes";
-    private static final String EXAMPLE_URL = "http://192.168.0.241:8080/api/get_all_fridges";
-    private static final String UPDATE_RECIPE_PATH = "http://192.168.0.241:8080/api/update_recipe/";
-    private static final String ADD_RATING_TO_RECIPE_PATH = "http://192.168.0.241:8080/api/add_rating/";
+    private static final String SERVER_PATH = "http://192.168.0.241:8080";
+
+    private static final String GET_PRODUCTS_PATH = SERVER_PATH + "/api/get_products/user_id/";
+    private static final String SEND_RECIPE_PATH = SERVER_PATH + "/api/add_recipe/user_id/";
+    private static final String GET_RECIPES_URL = SERVER_PATH + "/api/get_recipes";
+    private static final String EXAMPLE_URL = SERVER_PATH + "/api/get_all_fridges";
+    private static final String UPDATE_RECIPE_PATH = SERVER_PATH + "/api/update_recipe/";
+    private static final String ADD_RATING_TO_RECIPE_PATH = SERVER_PATH + "/api/add_rating/";
+    private static final String GET_ACCOUNT_SETTINGS = SERVER_PATH + "/api/get_account_settings/";
     private Logger logger = Logger.getLogger(RestConnectionManagerService.class.getName());
 
     String tryToLogInAndReturnOauthKey(String username, String password) throws Exception {
@@ -307,5 +311,52 @@ class RestConnectionManagerService {
                 urlConnection.disconnect();
             }
         }
+    }
+
+    public AccountSettings getAccountSettingsFromServer(String username, String oAuthKey) throws Exception {
+        URL url;
+        HttpURLConnection urlConnection = null;
+        try {
+            url = new URL(GET_ACCOUNT_SETTINGS + username);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Basic " + oAuthKey);
+            urlConnection.setRequestProperty("Content-Type", "application/json");
+            urlConnection.setConnectTimeout(5000);
+            logger.info("trying TO LOG IN");
+            int responseCode = urlConnection.getResponseCode();
+            if (responseCode != 200) {
+                logger.info("problem with connection with code " + responseCode);
+                throw new IOException();
+            }
+            logger.info("connection success");
+            return convertToAccountSettingsObj(new BufferedReader(new InputStreamReader(urlConnection.getInputStream())));
+        } catch (SocketTimeoutException e) {
+            logger.info("could not connect to server");
+            throw new SocketTimeoutException("Nie mogę połączyć się z serwerem, sprawdź swoje połączenie z internetem");
+        } catch (IOException e) {
+            logger.info("bad credentials");
+            throw new IOException("Nieprawidłowy login bądź hasło");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Wystąpił nieoczekiwany błąd, spróbuj ponownie");
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
+
+    private AccountSettings convertToAccountSettingsObj(BufferedReader responseMessage) throws JSONException {
+        if (responseMessage != null) {
+            String jsonList = convertToString(responseMessage);
+            JSONObject jsonObj = new JSONObject(jsonList);
+            AccountSettings accountSettings = new AccountSettings();
+            accountSettings.setFirstName(jsonObj.getString("firstName"));
+            accountSettings.setSecondName(jsonObj.getString("lastName"));
+            accountSettings.setAge(jsonObj.getInt("age"));
+            accountSettings.setImg(jsonObj.getString("imageUrl"));
+            return accountSettings;
+        }
+        return null;
     }
 }

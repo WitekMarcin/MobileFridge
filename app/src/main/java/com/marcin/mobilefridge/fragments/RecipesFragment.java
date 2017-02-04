@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import com.marcin.mobilefridge.R;
 import com.marcin.mobilefridge.model.Recipe;
+import com.marcin.mobilefridge.services.FTPService;
 import com.marcin.mobilefridge.services.RecipeService;
 import com.marcin.mobilefridge.util.SharedPreferencesUtil;
 import com.marcin.mobilefridge.view.RecipeAdapter;
@@ -29,7 +31,7 @@ import static com.marcin.mobilefridge.util.SharedPreferencesUtil.SHARED_PREFEREN
  * {@link RecipesFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
  */
-public class RecipesFragment extends Fragment {
+public class RecipesFragment extends Fragment implements View.OnClickListener {
 
     private ArrayAdapter<Recipe> adapter;
 
@@ -37,6 +39,7 @@ public class RecipesFragment extends Fragment {
     private View view;
     private RecipeService recipeService;
     private ListView list;
+    private RecipeListTask recipeListTask;
 
     public RecipesFragment() {
         // Required empty public constructor
@@ -57,8 +60,11 @@ public class RecipesFragment extends Fragment {
 
         adapter = new RecipeAdapter(this.getContext(), R.layout.recipe, new ArrayList<Recipe>());
         list.setAdapter(adapter);
-        RecipeListTask recipeListTask = new RecipeListTask(this.getContext());
+        recipeListTask = new RecipeListTask(this.getContext());
         recipeListTask.execute();
+
+        FloatingActionButton floatingActionButton = (FloatingActionButton) view.findViewById(R.id.refresh);
+        floatingActionButton.setOnClickListener(this);
         return view;
     }
 
@@ -87,6 +93,15 @@ public class RecipesFragment extends Fragment {
         mListener = null;
     }
 
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.refresh:
+                refreshRecipes();
+                break;
+        }
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -107,6 +122,7 @@ public class RecipesFragment extends Fragment {
         private final Context context;
         private String errorMessage;
         private ArrayList<Recipe> recipesList;
+        private String result = "NONE";
 
         RecipeListTask(Context context) {
             this.context = context;
@@ -116,6 +132,10 @@ public class RecipesFragment extends Fragment {
         protected Boolean doInBackground(Void... params) {
             try {
                 recipesList = recipeService.getRecipes();
+                if (adapter.getCount() == recipesList.size()) {
+                    result = "NOTHING_CHANGED";
+                    return true;
+                }
             } catch (SocketTimeoutException e) {
                 errorMessage = getString(R.string.error_connection_failed);
                 return false;
@@ -126,13 +146,23 @@ public class RecipesFragment extends Fragment {
                 errorMessage = getString(R.string.error_unexpected_error);
                 return false;
             }
+            FTPService ftpService = new FTPService();
+            for (Recipe r : recipesList) {
+                try {
+                    r.setImage(ftpService.downloadRecipe(context, "images", String.valueOf(r.getId())));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            result = "LIST_CHANGED";
             return true;
+
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
 //            showProgress(false);
-            if (success) {
+            if (success && result.equals("LIST_CHANGED")) {
                 try {
                     adapter.clear();
                     adapter.addAll(recipesList);
@@ -140,12 +170,8 @@ public class RecipesFragment extends Fragment {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
-            } else {
+            } else if (!result.equals("NOTHING_CHANGED")) {
                 adapter = new ArrayAdapter<>(context, R.layout.product, new ArrayList<Recipe>());
-            }
-            if (true) {
-
             }
         }
 
@@ -154,5 +180,10 @@ public class RecipesFragment extends Fragment {
             adapter = new ArrayAdapter<>(context, R.layout.product, new ArrayList<Recipe>());
 //            showProgress(false);
         }
+    }
+
+    public void refreshRecipes() {
+        recipeListTask = new RecipeListTask(this.getContext());
+        recipeListTask.execute();
     }
 }

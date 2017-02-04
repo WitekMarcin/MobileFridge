@@ -3,8 +3,8 @@ package com.marcin.mobilefridge.services;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
 import android.os.StrictMode;
-import android.util.Log;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 
@@ -12,9 +12,9 @@ import java.io.*;
 
 public class FTPService {
 
-    private String server = "ftp.192.168.0.241";
+    private String server = "mobilefridge.cba.pl";
     private int port = 21;
-    private String user = "FTP-User";
+    private String user = "mobilefridge";
     private String pass = "haslo1234";
     private FTPClient ftpClient;
     private int returnCode;
@@ -28,7 +28,7 @@ public class FTPService {
         }
     }
 
-    public void sendPicture(String login, Bitmap photo, Context context) {
+    public String sendPicture(String pictureId, Bitmap photo, Context context) {
         //policy
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
@@ -43,31 +43,33 @@ public class FTPService {
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
                 System.out.println("Operation failed. Server reply code: " + replyCode);
-                return;
+                return null;
             }
             boolean success = ftpClient.login(user, pass);
             showServerReply(ftpClient);
             if (!success) {
                 System.out.println("Could not login to the server");
-                return;
+                return null;
             } else {
                 System.out.println("LOGGED IN SERVER");
-//                ftpClient.changeWorkingDirectory("Projekt/uzytkownicy/");
+                ftpClient.changeWorkingDirectory("/mobilefridge.cba.pl/pictures");
                 ftpClient.setFileType(ftpClient.BINARY_FILE_TYPE, ftpClient.BINARY_FILE_TYPE);
                 ftpClient.setFileTransferMode(ftpClient.BINARY_FILE_TYPE);
-                ftpClient.storeFile(login + ".png", bitmapToSend(photo));
+                ftpClient.storeFile(pictureId + ".png", bitmapToSend(photo));
                 ftpClient.logout();
             }
         } catch (IOException ex) {
             System.out.println("Oops! Something wrong happened");
             ex.printStackTrace();
+            return null;
         }
         FileOutputStream fos = null;
         try {
-            fos = context.openFileOutput(login + ".png", Context.MODE_PRIVATE);
+            fos = context.openFileOutput(pictureId + ".png", Context.MODE_PRIVATE);
             photo.compress(Bitmap.CompressFormat.PNG, 100, fos); // w miejscu 100 wpisujemy kompresje (mniejsza warto�� = silniejsza kompresja)
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         } finally {
             try {
                 if (fos != null) {
@@ -77,6 +79,8 @@ public class FTPService {
                 e.printStackTrace();
             }
         }
+
+        return pictureId + ".png";
 
     }
 
@@ -90,38 +94,36 @@ public class FTPService {
         return bs;
     }
 
-    public void download(Context context, String folderToADD, String name) {
+    public Bitmap downloadRecipe(Context context, String folderToADD, String recipeId) throws IOException {
         File folder = new File(context.getFilesDir() +
                 File.separator + folderToADD);
         boolean success = true;
         if (!folder.exists()) {
-            success = folder.mkdir();
-        }
-        if (success) {
-            // Do so1mething on success
-        } else {
-            // Do something else on failure
+            folder.mkdir();
         }
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         ByteArrayInputStream bs = null;
         ftpClient = new FTPClient();
+        File downloadFile2 = new File(folder.getAbsolutePath(), "recipe" + recipeId + ".png");
+        if (checkIfFileIsStoredLocally(downloadFile2.getAbsolutePath())) {
+            return BitmapFactory.decodeFile(downloadFile2.getAbsolutePath());
+        }
         try {
 
             ftpClient.connect(server, port);
             ftpClient.login(user, pass);
+            ftpClient.changeWorkingDirectory("/mobilefridge.cba.pl/pictures");
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(ftpClient.BINARY_FILE_TYPE);
 
             // using InputStream retrieveFileStream(String)
-            String remoteFile2 = name + ".png";
-            File downloadFile2 = new File(folder.getAbsolutePath(), name + ".png");
+            String remoteFile2 = "recipe" + recipeId + ".png";
+            downloadFile2 = new File(folder.getAbsolutePath(), "recipe" + recipeId + ".png");
             OutputStream outputStream2 = new BufferedOutputStream(new FileOutputStream(downloadFile2));
             InputStream inputStream = ftpClient.retrieveFileStream(remoteFile2);
             byte[] bytesArray = new byte[4096];
             int bytesRead = -1;
-
-            //if(checkFileExists("/Projekt/miejsca/"+name+".png"))
             {
                 while ((bytesRead = inputStream.read(bytesArray)) != -1) {
                     outputStream2.write(bytesArray, 0, bytesRead);
@@ -137,6 +139,7 @@ public class FTPService {
         } catch (Exception ex) {
             System.out.println("Error: " + ex.getMessage());
             ex.printStackTrace();
+            throw new IOException();
         } finally {
             try {
                 if (ftpClient.isConnected()) {
@@ -145,70 +148,24 @@ public class FTPService {
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
+                throw new IOException();
+
             }
         }
-
+        return BitmapFactory.decodeFile(downloadFile2.getAbsolutePath());
     }
 
-    public void downloadAll(Context context, String folderToADD, String name) {
-        File folder = new File(context.getFilesDir() +
-                File.separator + folderToADD);
-        boolean success = true;
-        if (!folder.exists()) {
-            success = folder.mkdir();
-        }
-        if (success) {
-            // Do so1mething on success
-        } else {
-            // Do something else on failure
-        }
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-        ByteArrayInputStream bs = null;
-        ftpClient = new FTPClient();
+    private boolean checkIfFileIsStoredLocally(String absolutePath) {
         try {
-            int ilosc_zdjec = Integer.parseInt(name.replaceAll("[\\D]", ""));
-            ftpClient.connect(server, port);
-            ftpClient.login(user, pass);
-            ftpClient.enterLocalPassiveMode();
-            ftpClient.setFileType(ftpClient.BINARY_FILE_TYPE);
-            for (int i = 0; i <= ilosc_zdjec; i++) {
-                try {
-                    String remoteFile2 = "/Projekt/miejsca/" + i + ".png";
-                    File downloadFile2 = new File(folder.getAbsolutePath(), i + ".png");
-                    OutputStream outputStream2 = new BufferedOutputStream(new FileOutputStream(downloadFile2));
-                    InputStream inputStream = ftpClient.retrieveFileStream(remoteFile2);
-                    byte[] bytesArray = new byte[4096];
-                    int bytesRead = -1;
-                    while ((bytesRead = inputStream.read(bytesArray)) != -1) {
-                        outputStream2.write(bytesArray, 0, bytesRead);
-                    }
-                    success = ftpClient.completePendingCommand();
-                    if (success) {
-                        Log.d("Watek Zdjecia", "pobralem fote dla " + String.valueOf(i));
-                    }
-                    outputStream2.close();
-                    inputStream.close();
-                } catch (Exception e) {
-                    Log.d("Watek Zdjecia", "nie mam dla " + String.valueOf(i));
-                }
-            }
-        } catch (Exception ex) {
-            System.out.println("Error: " + ex.getMessage());
-            ex.printStackTrace();
-        } finally {
-            try {
-                if (ftpClient.isConnected()) {
-                    ftpClient.logout();
-                    ftpClient.disconnect();
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            if (BitmapFactory.decodeFile(absolutePath) == null)
+                return false;
+        } catch (Exception e) {
+            return false;
         }
+        return true;
     }
 
-    boolean checkFileExists(String filePath) throws IOException {
+    boolean FileExists(String filePath) throws IOException {
         InputStream inputStream = ftpClient.retrieveFileStream(filePath);
         returnCode = ftpClient.getReplyCode();
         if (inputStream == null || returnCode == 550) {

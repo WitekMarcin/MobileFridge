@@ -145,4 +145,12 @@ public class MainActivity extends AppCompatActivity implements RecipesFragment.O
                     }
                 }).show();
     }
+
+    public void refreshRecipes(View v) {
+        FragmentManager fm = getSupportFragmentManager();
+
+        RecipesFragment fragment = (RecipesFragment) fm.findFragmentByTag(RecipesFragment.class.getName());
+        fragment.refreshRecipes();
+    }
+
 }

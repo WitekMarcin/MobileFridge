@@ -1,5 +1,7 @@
 package com.marcin.mobilefridge.model;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by Marcin on 23.01.2017.
  */
@@ -11,17 +13,19 @@ public class Recipe {
 
     private String description;
 
-    private Object picture;
+    private String picture;
 
     private String componentsOfRecipe;
 
     private Integer rating;
 
+    private Bitmap image;
+
     public Recipe() {
 
     }
 
-    public Recipe(String title, String description, Object picture, String componentsOfRecipe) {
+    public Recipe(String title, String description, String picture, String componentsOfRecipe) {
         this.description = description;
         this.picture = picture;
         this.title = title;
@@ -44,7 +48,7 @@ public class Recipe {
         this.description = description;
     }
 
-    public void setPicture(Object picture) {
+    public void setPicture(String picture) {
         this.picture = picture;
     }
 
@@ -60,7 +64,7 @@ public class Recipe {
         return description;
     }
 
-    public Object getPicture() {
+    public String getPicture() {
         return picture;
     }
 
@@ -70,9 +74,10 @@ public class Recipe {
 
     @Override
     public String toString() {
-        return "{ \"title\" :" + "\"" + getTitle() + "\"," + "\"description\" :" + "\"" + getDescription() + "\","
+        String recipe = "{ \"title\" :" + "\"" + getTitle() + "\"," + "\"description\" :" + "\"" + getDescription() + "\","
                 + "\"picture\" :" + "\"" + getPicture() + "\"," +
                 "\"componentsOfRecipe\" :" + "\"" + getComponentsOfRecipe() + "\"}";
+        return recipe;
     }
 
     public Integer getRating() {
@@ -81,5 +86,13 @@ public class Recipe {
 
     public void setRating(Integer rating) {
         this.rating = rating;
+    }
+
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
     }
 }

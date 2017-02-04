@@ -22,4 +22,6 @@
     <string name="description_of_recipe">Opis przepisu</string>
     <string name="components_of_recipe">Składniki do przepisu</string>
     <string name="product_image">product image</string>
+    <string name="make_picture">Zrób zdjęcie</string>
+    <string name="mark">Oceń</string>
 </resources>

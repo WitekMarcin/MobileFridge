@@ -4,16 +4,21 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 import com.marcin.mobilefridge.R;
 import com.marcin.mobilefridge.model.Recipe;
+import com.marcin.mobilefridge.services.FTPService;
 import com.marcin.mobilefridge.services.RecipeService;
 import com.marcin.mobilefridge.util.SharedPreferencesUtil;
 
@@ -30,6 +35,7 @@ public class CreateRecipe extends AppCompatActivity {
     private RecipeService recipeService;
     private View view;
     private View mProgressView;
+    private Bitmap photoOfRecipe;
 
 
     @Override
@@ -110,7 +116,14 @@ public class CreateRecipe extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
-                recipeService.sendNewRecipe(recipe);
+                Long id = recipeService.sendNewRecipe(recipe);
+
+                if (photoOfRecipe != null) {
+                    FTPService ftpService = new FTPService();
+                    String pathToPicture = ftpService.sendPicture("recipe" + String.valueOf(id), photoOfRecipe, context);
+                    if (pathToPicture != null)
+                        recipeService.updateRecipePicture(recipe, pathToPicture, String.valueOf(id));
+                }
             } catch (SocketTimeoutException e) {
                 errorMessage = getString(R.string.error_connection_failed);
                 return false;
@@ -138,5 +151,20 @@ public class CreateRecipe extends AppCompatActivity {
                 Toast.makeText(context, "Nie udało się dodać przepisu : " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            ImageView miniature = (ImageView) findViewById(R.id.imageRecipe);
+            photoOfRecipe = (Bitmap) data.getExtras().get("data");
+            miniature.setImageBitmap(photoOfRecipe);
+        }
+    }
+
+    public void makePhotoForRecipe(View view) {
+        //Obsluga_zdjecia ob=new Obsluga_zdjecia();
+        Intent picture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(picture, 1);
     }
 }

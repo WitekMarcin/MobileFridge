@@ -51,7 +51,8 @@
             android:layout_height="wrap_content"
             android:text="Dodaj przepis"
             android:onClick="addRecipe"
-            android:id="@+id/button" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true"/>
+            android:id="@+id/button" android:layout_alignParentBottom="true"
+            android:layout_toEndOf="@+id/recipe_add_progress"/>
 
     <ProgressBar
             android:id="@+id/recipe_add_progress"
@@ -60,5 +61,16 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:visibility="gone"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/make_picture"
+            android:onClick="makePhotoForRecipe"
+            android:id="@+id/takePictureButton" android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"/>
+    <ImageView
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:id="@+id/imageRecipe" android:layout_alignParentTop="true" android:layout_alignParentEnd="true"/>
 
 </RelativeLayout>

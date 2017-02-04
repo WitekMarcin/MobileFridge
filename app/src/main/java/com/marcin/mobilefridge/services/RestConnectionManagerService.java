@@ -26,6 +26,8 @@ class RestConnectionManagerService {
     private static final String SEND_RECIPE_PATH = "http://192.168.0.241:8080/api/add_recipe/user_id/";
     private static final String GET_RECIPES_URL = "http://192.168.0.241:8080/api/get_recipes";
     private static final String EXAMPLE_URL = "http://192.168.0.241:8080/api/get_all_fridges";
+    private static final String UPDATE_RECIPE_PATH = "http://192.168.0.241:8080/api/update_recipe/";
+    private static final String ADD_RATING_TO_RECIPE_PATH = "http://192.168.0.241:8080/api/add_rating/";
     private Logger logger = Logger.getLogger(RestConnectionManagerService.class.getName());
 
     String tryToLogInAndReturnOauthKey(String username, String password) throws Exception {
@@ -131,7 +133,7 @@ class RestConnectionManagerService {
         return builder.toString();
     }
 
-    public void sendNewRecipeToServer(String oAuthKeyValue, String username, Recipe recipe) throws Exception {
+    Long sendNewRecipeToServer(String oAuthKeyValue, String username, Recipe recipe) throws Exception {
         URL url;
         HttpURLConnection urlConnection = null;
         try {
@@ -148,24 +150,35 @@ class RestConnectionManagerService {
             logger.info("trying TO SEND");
             urlConnection.connect();
             int responseCode = urlConnection.getResponseCode();
-            if (responseCode != 201)
+            if (responseCode != 201 && responseCode != 200)
                 throw new IOException();
             logger.info("log in succesfully wit code " + responseCode);
 
+            return getIdOfRecipe(new BufferedReader(new InputStreamReader(urlConnection.getInputStream())));
+
         } catch (SocketTimeoutException e) {
             logger.info("could not connect to server");
+            e.printStackTrace();
             throw new SocketTimeoutException("Nie mogę połączyć się z serwerem, sprawdź swoje połączenie z internetem");
         } catch (IOException e) {
             logger.info("bad credentials");
+            e.printStackTrace();
             throw new IOException("Nieprawidłowy login bądź hasło");
         } catch (Exception e) {
             logger.info("unknown Excpetion " + e.getCause());
+            e.printStackTrace();
             throw new SocketTimeoutException("Wystąpił nieoczekiwany błąd, spróbuj ponownie");
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
             }
         }
+    }
+
+    private Long getIdOfRecipe(BufferedReader responseMessage) throws JSONException {
+        String json = convertToString(responseMessage);
+        JSONObject recipe = new JSONObject(json);
+        return recipe.getLong("id");
     }
 
     public ArrayList<Recipe> getAllRecipes(String oAuthKey) throws Exception {
@@ -220,5 +233,79 @@ class RestConnectionManagerService {
             }
         }
         return productList;
+    }
+
+    public void updateRecipePicture(String oAuthKey, Recipe recipe, String id) throws IOException {
+        URL url;
+        HttpURLConnection urlConnection = null;
+        try {
+            url = new URL(UPDATE_RECIPE_PATH + id);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Basic " + oAuthKey);
+            urlConnection.setRequestProperty("Content-Type", "application/json");
+            urlConnection.setRequestMethod("POST");
+
+            urlConnection.setConnectTimeout(5000);
+            OutputStream outputStream = urlConnection.getOutputStream();
+            outputStream.write(recipe.toString().getBytes("UTF-8"));
+            outputStream.close();
+            logger.info("trying TO SEND");
+            urlConnection.connect();
+            int responseCode = urlConnection.getResponseCode();
+            if (responseCode != 201 && responseCode != 200)
+                throw new IOException();
+            logger.info("log in succesfully wit code " + responseCode);
+
+        } catch (SocketTimeoutException e) {
+            logger.info("could not connect to server");
+            throw new SocketTimeoutException("Nie mogę połączyć się z serwerem, sprawdź swoje połączenie z internetem");
+        } catch (IOException e) {
+            logger.info("bad credentials");
+            throw new IOException("Nieprawidłowy login bądź hasło");
+        } catch (Exception e) {
+            logger.info("unknown Excpetion " + e.getCause());
+            throw new SocketTimeoutException("Wystąpił nieoczekiwany błąd, spróbuj ponownie");
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
+
+    void sendMarkForRecipe(String oAuthKey, Integer mark, Long id) throws IOException {
+        URL url;
+        HttpURLConnection urlConnection = null;
+        try {
+            url = new URL(ADD_RATING_TO_RECIPE_PATH + id);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Basic " + oAuthKey);
+            urlConnection.setRequestProperty("Content-Type", "application/json");
+            urlConnection.setRequestMethod("POST");
+
+            urlConnection.setConnectTimeout(5000);
+            OutputStream outputStream = urlConnection.getOutputStream();
+            outputStream.write(("{\"rating\":" + String.valueOf(mark) + "}").getBytes("UTF-8"));
+            outputStream.close();
+            logger.info("trying TO SEND");
+            urlConnection.connect();
+            int responseCode = urlConnection.getResponseCode();
+            if (responseCode != 201 && responseCode != 200)
+                throw new IOException();
+            logger.info("log in succesfully wit code " + responseCode);
+
+        } catch (SocketTimeoutException e) {
+            logger.info("could not connect to server");
+            throw new SocketTimeoutException("Nie mogę połączyć się z serwerem, sprawdź swoje połączenie z internetem");
+        } catch (IOException e) {
+            logger.info("bad credentials");
+            throw new IOException("Nieprawidłowy login bądź hasło");
+        } catch (Exception e) {
+            logger.info("unknown Excpetion " + e.getCause());
+            throw new SocketTimeoutException("Wystąpił nieoczekiwany błąd, spróbuj ponownie");
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
     }
 }

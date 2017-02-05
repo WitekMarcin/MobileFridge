@@ -32,6 +32,7 @@ class RestConnectionManagerService {
     private static final String UPDATE_RECIPE_PATH = SERVER_PATH + "/api/update_recipe/";
     private static final String ADD_RATING_TO_RECIPE_PATH = SERVER_PATH + "/api/add_rating/";
     private static final String GET_ACCOUNT_SETTINGS = SERVER_PATH + "/api/get_account_settings/";
+    private static final String UPDATE_ACCOUNT_SETTINGS = SERVER_PATH + "/api/save_account_settings/";
     private Logger logger = Logger.getLogger(RestConnectionManagerService.class.getName());
 
     String tryToLogInAndReturnOauthKey(String username, String password) throws Exception {
@@ -358,5 +359,42 @@ class RestConnectionManagerService {
             return accountSettings;
         }
         return null;
+    }
+
+    void sendAccountSettingsToServer(String username, String oAuthKey, AccountSettings accountSettings) throws IOException {
+        URL url;
+        HttpURLConnection urlConnection = null;
+        try {
+            url = new URL(UPDATE_ACCOUNT_SETTINGS + username);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Basic " + oAuthKey);
+            urlConnection.setRequestProperty("Content-Type", "application/json");
+            urlConnection.setRequestMethod("POST");
+
+            urlConnection.setConnectTimeout(5000);
+            OutputStream outputStream = urlConnection.getOutputStream();
+            outputStream.write(accountSettings.toString().getBytes("UTF-8"));
+            outputStream.close();
+            logger.info("trying TO SEND");
+            urlConnection.connect();
+            int responseCode = urlConnection.getResponseCode();
+            if (responseCode != 201 && responseCode != 200)
+                throw new IOException();
+            logger.info("log in succesfully wit code " + responseCode);
+
+        } catch (SocketTimeoutException e) {
+            logger.info("could not connect to server");
+            throw new SocketTimeoutException("Nie mogę połączyć się z serwerem, sprawdź swoje połączenie z internetem");
+        } catch (IOException e) {
+            logger.info("bad credentials");
+            throw new IOException("Nieprawidłowy login bądź hasło");
+        } catch (Exception e) {
+            logger.info("unknown Excpetion " + e.getCause());
+            throw new SocketTimeoutException("Wystąpił nieoczekiwany błąd, spróbuj ponownie");
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
     }
 }

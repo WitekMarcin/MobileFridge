@@ -1,22 +1,28 @@
 package com.marcin.mobilefridge.fragments;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 import com.marcin.mobilefridge.R;
 import com.marcin.mobilefridge.model.AccountSettings;
 import com.marcin.mobilefridge.services.LoginService;
 import com.marcin.mobilefridge.util.SharedPreferencesUtil;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+
+import static android.app.Activity.RESULT_OK;
 import static com.marcin.mobilefridge.util.SharedPreferencesUtil.SHARED_PREFERENCES_FILE_PATH;
 
 /**
@@ -35,6 +41,8 @@ public class ProfileFragment extends Fragment {
     private ImageView imageProfile;
     private TextView nickTextView;
     private LoginService loginService;
+    private Bitmap profilePhoto;
+    private SharedPreferencesUtil sharedPreferences;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -49,7 +57,7 @@ public class ProfileFragment extends Fragment {
 
         prepareViewConnectors();
 
-        SharedPreferencesUtil sharedPreferences = new SharedPreferencesUtil(
+        sharedPreferences = new SharedPreferencesUtil(
                 this.getActivity().getSharedPreferences(SHARED_PREFERENCES_FILE_PATH, Context.MODE_PRIVATE));
         loginService = new LoginService();
         AccountSettingsTask accountSettingsTask = new AccountSettingsTask(this.getContext(), sharedPreferences);
@@ -67,6 +75,38 @@ public class ProfileFragment extends Fragment {
         lastNameEditText = (EditText) view.findViewById(R.id.lastNameField);
         ageEditText = (EditText) view.findViewById(R.id.ageEditText);
         imageProfile = (ImageView) view.findViewById(R.id.profileImage);
+        imageProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                makePhotoForRecipe();
+            }
+        });
+        Button sendButton = (Button) view.findViewById(R.id.buttonSave);
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AccountSettings accountSettings = new AccountSettings();
+
+//
+                imageProfile.setDrawingCacheEnabled(true);
+                imageProfile.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                imageProfile.layout(0, 0, imageProfile.getMeasuredWidth(), imageProfile.getMeasuredHeight());
+                imageProfile.buildDrawingCache(true);
+                Bitmap b = Bitmap.createBitmap(imageProfile.getDrawingCache());
+                imageProfile.setDrawingCacheEnabled(false);
+//
+
+                accountSettings.setImageBitmap(b);
+                accountSettings.setImg("profileImage.png");
+                accountSettings.setAge(Integer.valueOf(ageEditText.getText().toString()));
+                accountSettings.setFirstName(firstNameEditText.getText().toString());
+                accountSettings.setSecondName(lastNameEditText.getText().toString());
+
+                AccountSettingsSaveTask accountSettingsSaveTask = new AccountSettingsSaveTask(getContext(), sharedPreferences, accountSettings);
+                accountSettingsSaveTask.execute();
+            }
+        });
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -122,6 +162,7 @@ public class ProfileFragment extends Fragment {
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
+
                 accountSettings = loginService.getAccountSettingsFromServer(sharedPreferences.restoreData(SharedPreferencesUtil.LOGIN_PREFERENCES_PATH),
                         sharedPreferences.restoreData(SharedPreferencesUtil.O_AUTH_KEY));
             } catch (Exception e) {
@@ -136,15 +177,85 @@ public class ProfileFragment extends Fragment {
                 firstNameEditText.setText(accountSettings.getFirstName());
                 lastNameEditText.setText(accountSettings.getSecondName());
                 ageEditText.setText(String.valueOf(accountSettings.getAge()));
-                imageProfile.setImageBitmap(accountSettings.getImageBitmap());
+                if (accountSettings.getImg() != null) {
+                    File folder = new File(context.getFilesDir() + File.separator + "images");
+                    File downloadFile2 = new File(folder.getAbsolutePath(), "profileImage.png");
+                    accountSettings.setImageBitmap(BitmapFactory.decodeFile(downloadFile2.getAbsolutePath()));
+                    imageProfile.setImageBitmap(accountSettings.getImageBitmap());
+                }
             } else {
-                Toast.makeText(context, "There is problem with connection to server", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Jest problem z połączeniem do serwera", Toast.LENGTH_SHORT).show();
             }
         }
 
         @Override
         protected void onCancelled() {
-            Toast.makeText(context, "There is problem with connection to server", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Jest problem z połączeniem do serwera", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            ImageView miniature = (ImageView) view.findViewById(R.id.profileImage);
+            profilePhoto = (Bitmap) data.getExtras().get("data");
+            miniature.setImageBitmap(profilePhoto);
+        }
+    }
+
+    public void makePhotoForRecipe() {
+        Intent picture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(picture, 1);
+    }
+
+    private class AccountSettingsSaveTask extends AsyncTask<Void, Void, Boolean> {
+
+        private final Context context;
+        private SharedPreferencesUtil sharedPreferences;
+        private AccountSettings accountSettings;
+
+        AccountSettingsSaveTask(Context context, SharedPreferencesUtil sharedPreferences, AccountSettings accountSettings) {
+            this.context = context;
+            this.sharedPreferences = sharedPreferences;
+            this.accountSettings = accountSettings;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (accountSettings.getImageBitmap() != null) {
+                    OutputStream fOut;
+                    File root = new File(context.getFilesDir() + File.separator + "images");
+                    File sdImageMainDirectory = new File(root, "profileImage.png");
+                    fOut = new FileOutputStream(sdImageMainDirectory);
+                    Uri outputFileUri = Uri.fromFile(sdImageMainDirectory);
+                    accountSettings.getImageBitmap().compress(Bitmap.CompressFormat.PNG, 100, fOut);
+                    fOut.flush();
+                    fOut.close();
+                }
+                loginService.sendAccountSettingsToServer(sharedPreferences.restoreData(SharedPreferencesUtil.LOGIN_PREFERENCES_PATH),
+                        sharedPreferences.restoreData(SharedPreferencesUtil.O_AUTH_KEY), accountSettings);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            if (success) {
+                Toast.makeText(context, "Poprawnie zapisano zmiany", Toast.LENGTH_SHORT).show();
+
+            } else {
+                Toast.makeText(context, "Wystąpił bład", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            Toast.makeText(context, "Wystąpił bład", Toast.LENGTH_SHORT).show();
         }
     }
 

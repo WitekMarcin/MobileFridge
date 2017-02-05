@@ -4,6 +4,8 @@ import android.content.SharedPreferences;
 import com.marcin.mobilefridge.model.AccountSettings;
 import com.marcin.mobilefridge.util.SharedPreferencesUtil;
 
+import java.io.IOException;
+
 /**
  * Created by Marcin on 15.12.2016.
  */
@@ -32,5 +34,9 @@ public class LoginService {
 
     public void logOut() {
         sharedPreferencesUtil.clearAllDataForUser();
+    }
+
+    public void sendAccountSettingsToServer(String username, String oAuthKey, AccountSettings accountSettings) throws IOException {
+        restConnectionManagerService.sendAccountSettingsToServer(username, oAuthKey, accountSettings);
     }
 }
